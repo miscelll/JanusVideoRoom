@@ -1,0 +1,100 @@
+
+<!DOCTYPE html>
+<html style="background: #f0f7fb;">
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>VideoRoom SignUp</title>
+    <link rel="stylesheet" href="utilities/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="utilities/css/Login-Form-Clean.css">
+    <link rel="stylesheet" href="utilities/css/Registration-Form-with-Photo.css">
+    <link rel="stylesheet" href="utilities/css/styles.css">
+    <link rel="stylesheet" href="utilities/css/button.css">
+
+    <script src="utilities/js/util/httpRequest.js"></script>
+    <script>
+    
+        // Callback: è stata editata la casella di testo
+        function validateInput() {
+            var name = document.forms[0].name.value;
+            var surname = document.forms[0].surname.value;
+            var email = document.forms[0].email.value;
+            var password = document.forms[0].password.value;
+            var password_rep = document.forms[0].password_repeat.value;
+            
+            if(name==""||surname==""||email==""||password==""||password_rep==""){
+                swal("Missing fields","Insert all value to continue","warning");
+                return;
+            }
+
+            if(!validateText(name) || !validateText(surname)){
+                swal("Error","Fill correctly name and surname","warning");
+                return;
+            }
+
+             if(password.length < 7){
+                 swal("Error","Password must be at least 8 characters","warning");
+                 return;
+             }
+            
+            if(password != password_rep){
+                swal("Error","Passwords don't match","warning");
+                return;
+            }
+
+            var req = newXMLHttpRequest();
+            req.onreadystatechange = function() {
+                if (req.readyState == 4) {
+                    if (req.status == 200) {
+                        swal({title: "Congrats",text: "Check your email for confirmation",icon:"success"})
+                        .then(function(){
+                            var delay = 5000; 
+                            setTimeout(function(){ window.location = "./login"; }, delay);
+                        });
+                    } else if(req.status == 409){
+                        swal({title: "Error",text: "Email already exists",icon:"warning"})
+                    }
+                }
+            }
+            
+            req.open("POST", "/register", true);
+            req.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+            var params = "name=" + escape(name) + "&surname=" + escape(surname) + "&email=" + email + "&password=" + password;
+            req.send(params);
+        }
+
+        function validateText(name){
+            var regName = new RegExp("[a-zA-Z]+");
+
+            if(!regName.test(name)){
+                return false;
+            }
+            return true;
+        }
+    </script>
+</head>
+
+<body style="background: rgb(233, 233, 233);">
+    <div class="register-photo" style="padding: 30px;">
+        <div class="form-container">
+            <div class="image-holder" style="background: url(&quot;utilities/images/foto2.jpg&quot;) center /cover ;"></div>
+           
+             <form>
+                <h2 class="text-center"><strong>Create</strong> a new account.</h2>
+                <div class="form-group"><input type="text" class="form-control" name="name" placeholder="Name" /></div>
+                <div class="form-group"><input type="text" class="form-control" name="surname" placeholder="Surname" /></div>
+                <div class="form-group"><input type="email" class="form-control" name="email" placeholder="Email" /></div>
+                <div class="form-group"><input type="password" class="form-control" name="password" placeholder="Password" /></div>
+                <div class="form-group"><input type="password" class="form-control" name="password_repeat" placeholder="Password (repeat)" /></div>
+                <div class="form-group"><button class="btn btn-primary btn-block" type="button" onclick="validateInput()">Sign Up</button></div><a class="already" href="/login">You already have an account? Login here.</a>
+            </form>
+        </div>
+    </div>
+    <script src="utilities/js/jquery.min.js"></script>
+    <script src="utilities/bootstrap/js/bootstrap.min.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+</body>
+
+</html>

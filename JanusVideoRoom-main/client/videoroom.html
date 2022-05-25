@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Unina Video Conference</title>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/webrtc-adapter/8.1.1/adapter.min.js" ></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.9.1/jquery.min.js" ></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.blockUI/2.70/jquery.blockUI.min.js" ></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/5.4.0/bootbox.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/spin.js/2.3.2/spin.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.4/toastr.min.js"></script>
+<script type="text/javascript" src="janus.js" ></script>
+<script type="text/javascript" src="video.js"></script>
+<script>
+
+	document.addEventListener('DOMContentLoaded', () => {
+		var room = new URLSearchParams(window.location.search);
+        if(room.has('room')) {
+			document.getElementById('invited').innerHTML = "<p>Press <code>Start</code> to join in room <b>" + room.get('room') + "</b></p>";
+        } else {
+			document.getElementById('invited').innerHTML = "<p>Press  <code>Start</code> to join or create one room.</p>";
+		}
+	});
+
+	$(function() {
+		$(".navbar-static-top").load("navbar.html", function() {
+			$(".navbar-static-top li.dropdown").addClass("active");
+			$(".navbar-static-top a[href='videoroomtest.html']").parent().addClass("active");
+		});
+		$(".footer").load("footer.html");
+	});
+
+	//possibile INVITE
+	function Input() {
+		var req = new XMLHttpRequest();
+			req.onreadystatechange = function() {
+				if (req.readyState == 4) {
+					if (req.status == 200) {
+						swal({title: "Invite sent",text: "wait for new users", icon:"success"});
+					   // .then(function(){
+						   // var delay = 5000; 
+							//setTimeout(function(){ window.location = "./login"; }, delay);
+						};
+					} else if(req.status == 409){
+						swal({title: "Error", text: "not possible to send",icon:"warning"});
+					}           
+			}		
+			var body = "email=" + document.getElementById('friend_email').value + "&room=" + document.getElementById('actual_room').value;
+			req.open("POST", "/invite", true);
+			req.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+			
+			req.send(body);	
+	}
+
+	function logout() {
+		var req = new XMLHttpRequest();
+		req.onreadystatechange = function() {
+			if (req.readyState == 4) {
+				if (req.status == 200) {
+					// swal({title: "Logged Out", text:"", icon:"success"});
+					window.location.replace("/login");
+				} else if (req.status == 409) {
+					swal({title: "Error", text: "something went wrong",icon:"warning"});
+				}
+			}
+		}
+
+		req.open("GET", "/logout", true);
+		req.send();
+	}
+</script>
+<style>
+	.videoroom-img {
+		height: 405px;
+		width: 607px;
+	}
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/cerulean/bootstrap.min.css" type="text/css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.4/toastr.min.css"/>
+</head>
+<body>
+
+<div class="container">
+	<div class="row">
+		<div class="col-md-12">
+			<div class="page-header" style="text-align:center;">
+				<h1>Unina Video Conference</h1>
+				<br>
+				<span>
+					<button class="btn btn-primary" autocomplete="off" id="start">Start</button>
+					<button class="btn btn-primary" autocomplete="off" id="logout-button" onclick="logout()">Logout</button>
+				</span>
+			</div>
+			<br>
+			<div class="container" id="details">
+				<div class="row">
+					<div class="col-md-12" style="text-align:center;">
+						<h3 id="wlcmBuddy"></h3>
+						<img src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fmedia1.thehungryjpeg.com%2Fthumbs2%2Fori_3746783_7e0fpnjs5z6oprxvmn2lb6ky6tdcc341lczfwkpk_online-video-conference-vector-man-and-chat-director-communicates-with-staff-webinar-business-meeting-consultation-seminar-online-training-concept-flat-cartoon-isolated-illustration.jpg&f=1&nofb=1" class="videoroom-img" />
+						<div class="alert alert-info">Welcome on the un-official <b>Video Room
+							Conference</b>  of Unina , created using Janus-Gateway (developed by  
+						<a href="https://github.com/meetecho/janus-gateway">Meetcho</a>)
+						and an express server wrote using NodeJS</div>
+						<div class="col-md-12" style="text-align: center;" id="invited">
+						</div>
+						
+					</div>
+				</div>
+			</div>
+			<div class="container hide" id="videojoin">
+				<div class="row">
+					<!--<span class="label label-info" id="you"></span>-->
+					<div class="col-md-12" style="text-align:center;" id="controls">
+						<div class="hide" id="registernow">
+							<h3>Here your experience with <b>Unina Video Conference</b> begins</h3>
+							<h4>Press <code>Join the room</code> to join in an existing conference or press <code>Create Room</code> to create your own room</h4>
+							<img src="http://www.trendyonlinesolution.in/wp-content/uploads/2018/10/animation-video.png" />	
+							<br><br>
+							<span>
+								<button class="btn btn-primary" autocomplete="off" id="createroom">Create room</button>
+								<button class="btn btn-primary" autocomplete="off" id="joinroom">Join room</button>
+							</span>
+							<br>	
+						</div>
+						<div class="input-group margin-bottom-md hide" id="create">
+							<input autocomplete="off" class="form-control" type="text" placeholder="Choose room id" id="roomid" />
+							
+							<span class="input-group-btn">
+								<button class="btn btn-primary btn-block" autocomplete="off" id="addbtn">Add new room</button>
+							</span>
+						</div>
+						<div class="input-group margin-bottom-md hide" id="join">
+							<input autocomplete="off" class="form-control" type="text" placeholder="Choose room" id="chooseroom" />
+							
+							<span class="input-group-btn">
+								<button class="btn btn-primary btn-block" autocomplete="off" id="joinbtn">Join room</button>
+							</span>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="container hide" id="videos">
+				<input type="hidden" name="actual_room" id="actual_room" value="" />
+				<div class="row">
+					<div class="col-md-4">
+						<div class="panel panel-default">
+							<div class="panel-heading">
+								<h3 class="panel-title">Your Camera<span class="label label-primary hide" id="publisher"></span>
+									<div class="btn-group btn-group-xs pull-right hide">
+										<div class="btn-group btn-group-xs">
+											<button id="bitrateset" autocomplete="off" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+												Bandwidth<span class="caret"></span>
+											</button>
+											<ul id="bitrate" class="dropdown-menu" role="menu">
+												<li><a href="#" id="0">No limit</a></li>
+												<li><a href="#" id="128">Cap to 128kbit</a></li>
+												<li><a href="#" id="256">Cap to 256kbit</a></li>
+												<li><a href="#" id="512">Cap to 512kbit</a></li>
+												<li><a href="#" id="1024">Cap to 1mbit</a></li>
+												<li><a href="#" id="1500">Cap to 1.5mbit</a></li>
+												<li><a href="#" id="2000">Cap to 2mbit</a></li>
+											</ul>
+										</div>
+									</div>
+								</h3>
+							</div>
+							<div class="panel-body" id="videolocal"></div>
+						</div>
+					</div>
+					<div class="col-md-4">
+						<div class="panel panel-default">
+							<div class="panel-heading">
+								<h3 class="panel-title">Remote Video #1 <span class="label label-info hide" id="remote1"></span></h3>
+							</div>
+							<div class="panel-body relative" id="videoremote1"></div>
+						</div>
+					</div>
+					<div class="col-md-4">
+						<div class="panel panel-default">
+							<div class="panel-heading">
+								<h3 class="panel-title">Remote Video #2 <span class="label label-info hide" id="remote2"></span></h3>
+							</div>
+							<div class="panel-body relative" id="videoremote2"></div>
+						</div>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-md-4">
+						<div class="panel panel-default">
+							<div class="panel-heading">
+								<h3 class="panel-title">Remote Video #3 <span class="label label-info hide" id="remote3"></span></h3>
+							</div>
+							<div class="panel-body relative" id="videoremote3"></div>
+						</div>
+					</div>
+					<div class="col-md-4">
+						<div class="panel panel-default">
+							<div class="panel-heading">
+								<h3 class="panel-title">Remote Video #4 <span class="label label-info hide" id="remote4"></span></h3>
+							</div>
+							<div class="panel-body relative" id="videoremote4"></div>
+						</div>
+					</div>
+					<div class="col-md-4">
+						<div class="panel panel-default">
+							<div class="panel-heading">
+								<h3 class="panel-title">Remote Video #5 <span class="label label-info hide" id="remote5"></span></h3>
+							</div>
+							<div class="panel-body relative" id="videoremote5"></div>
+						</div>
+					</div>
+				</div>
+				<div>
+					
+					<div class="panel panel-default">
+						<div class="panel-heading">
+								<!-- <span class="label label-info hide" id="invite"></span> -->
+								<p>Invite your friends in this conference by email invitation</p>
+								<input autocomplete="off" class="form-control" type="email" placeholder="Friend's Email" id="friend_email" />
+						<div class="form-group"><button class="btn btn-primary btn-block" type="button" onclick=Input()>Invite</button></div>
+						
+					 <!-- <div class="panel-body relative" id="videoremote5"></div>  -->
+					</div>
+
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<hr>
+	<div class="footer">
+	</div>
+</div>
+
+</body>
+</html>

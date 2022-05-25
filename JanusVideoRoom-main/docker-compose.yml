@@ -1,0 +1,52 @@
+version: '3'
+services:
+
+  mongo: 
+    networks:
+      network_1:
+        ipv4_address: 194.20.1.3
+    image: 'mongo'
+    container_name : 'mongodb'
+    environment:
+      - MONGO_INITDB_DATABASE=WebRTC
+      - MONGO_INITDB_ROOT_USERNAME=database_wrtc_name
+      - MONGO_INITDB_ROOT_PASSWORD=database_wrtc_pass
+
+    volumes:
+    - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    ports:
+    - '27017-27019:27017-27019'
+    restart: always
+
+  server:
+    networks:
+      network_1:
+        ipv4_address: 194.20.1.4
+    image: miscia/node-server:v5
+    container_name : server_Webrtc
+    environment:
+      - MONGO=mongodb://root:pippozzo@194.20.1.3:27017/WebRTC
+      - USER=EMAIL
+      - PASS=PASSWORD
+      - JWT=jldtbo8eelemaprkd
+      - CERT=uninawebrtc
+    ports:
+    - '8008:8008'
+    restart: always
+
+  janus:
+    networks:
+      network_1:
+        ipv4_address: 194.20.1.5
+    image: ale13/janus-gateway:v5
+    container_name : janus_gateway
+    command: /opt/janus/bin/janus
+    ports:
+    - '8088-8089:8088-8089'
+    restart: always
+
+networks:
+    network_1:
+        ipam:
+            config:
+                - subnet: 194.20.1.1/24
